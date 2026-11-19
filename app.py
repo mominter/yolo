@@ -6,7 +6,6 @@ from ultralytics import YOLO
 from PIL import Image
 import numpy as np
 import io
-import cv2
 
 # ---------------------------------
 # 1. 페이지 설정
@@ -80,8 +79,8 @@ if image is not None:
             use_container_width=True
         )
 
-    # PIL 이미지를 numpy 배열로 변환
-    image_array = np.array(image)
+    # PIL의 RGB 이미지를 YOLO 입력 규격인 BGR로 변환
+    image_array = np.array(image)[:, :, ::-1].copy()
 
     # ---------------------------------
     # 5. 추론 실행
@@ -97,30 +96,15 @@ if image is not None:
 
             result = results[0]
 
-            # YOLO 결과 이미지 (BGR)
+            # 탐지 결과 이미지
             result_image = result.plot()
 
-            # BGR -> RGB 변환
-            result_image = result_image[..., ::-1].copy()
+            # OpenCV BGR -> RGB 변환
+            result_image = result_image[:, :, ::-1].copy()
 
-            # RGB 배열 -> PIL 이미지
-            result_pil = Image.fromarray(result_image)
-
-            # 결과 저장
-            st.session_state["result_image"] = result_pil
+            st.session_state["result_image"] = result_image
             st.session_state["result"] = result
 
-            if "result_image" in st.session_state:
-
-                result_image = st.session_state["result_image"]
-                result = st.session_state["result"]
-
-                with col2:
-                    st.image(
-                        result_image,
-                        caption="YOLO 추론 결과",
-                        use_container_width=True
-                    )
     # ---------------------------------
     # 6. 추론 결과 출력
     # ---------------------------------
